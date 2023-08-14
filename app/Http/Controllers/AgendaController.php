@@ -49,6 +49,7 @@ class AgendaController extends Controller
             'id_events' => $id_events,
             'title' => $request->title,
             'description' => $request->deskripsi,
+            'jumlah_peserta' => $request->jumlah_peserta,
             'start' => date('Y-m-d H:i:s', strtotime($request->start)),
             'end' => date('Y-m-d H:i:s', strtotime($request->end)),
             'color' => $color[$arr],
@@ -94,27 +95,6 @@ class AgendaController extends Controller
         }
         DB::table('events_tamu_eksternal')
             ->insert($events_tamu_eksternal);
-        // dd($events_tamu_eksternal);
-        // $data = [
-        //     'title' => $request->title,
-        //     'description' => "",
-        // ];
-
-        // Mail::send('email_agenda', $data, function($message) use ($events_tamu_eksternal) {
-        //     for ($i=0; $i < count($events_tamu_eksternal) ; $i++) { 
-        //         $message->to($events_tamu_eksternal[$i]['email'])
-        //             ->from('demenngoding98@gmail.com', 'Demen Ngoding')
-        //             ->subject('Agenda');
-        //     }
-        // });
-
-        // tidak jadi insert ke google calendar karena akan double
-        // $event = new EventGoogleCalendar;
-        // $event->name = $request->title;
-        // $event->description = $request->description;
-        // $event->startDateTime = new Carbon($request->start, '+07:00');
-        // $event->endDateTime = new Carbon($request->end, '+07:00');
-        // $event->save();
 
         // send notification here
         $this->send_notification_email($request->email_pj, $events_tamu_eksternal, $detail, $id_events);
@@ -124,6 +104,85 @@ class AgendaController extends Controller
             'msg' => 'Berhasil disimpan',
             'data' => $detail
         ], 200);
+    }
+
+    public function update(Request $request)
+    {
+        $data = $request->all();
+
+        $detail = [
+            // 'id_events' => $data['id_event'],
+            'title' => $data['title'],
+            'description' => $data['deskripsi'],
+            'jumlah_peserta' => $data['jumlah_peserta'],
+            'start' => date('Y-m-d H:i:s', strtotime($data['start'])),
+            'end' => date('Y-m-d H:i:s', strtotime($data['end'])),
+            // 'color' => $color[$arr],
+            'penyelenggara' => $data['penyelenggara'],
+            'penyelenggara_unit' => $data['penyelenggara_1'],
+            'penanggung_jawab' => $data['pj'],
+            'contact_person' => $data['cp'],
+            'email_pj' => $data['email_pj'],
+        ];
+        DB::table('events')
+            ->where('id_events', $data['id_event'])
+            ->update($detail);
+
+        // delete user nya
+        DB::table('events_tamu')->where('id_events', $data['id_event'])->delete();
+
+        // insert
+        $daftar_tamu = $data['daftar_tamu'];
+        $events_tamu = [];
+        for ($i=0; $i < count($daftar_tamu) ; $i++) { 
+            // get tamu
+            $tamu = DB::table('tamu')->where('id', $daftar_tamu[$i])->first();
+            
+            $events_tamu[] = [
+                'id_events' => $data['id_event'],
+                'id_tamu' => $daftar_tamu[$i],
+                'nama_tamu' => $tamu->nama
+            ];
+        }
+        DB::table('events_tamu')
+            ->insert($events_tamu);
+
+
+        // delete events_tamu_eksternal
+        DB::table('events_tamu_eksternal')->where('id_events', $data['id_event'])->delete();
+
+        // update tamu eksternal multiple
+        $id_tamu = $data['id_edit'];
+        $nama_tamu = $data['nama_tamu'];
+        $email_tamu = $data['email_tamu'];
+        $telp_tamu = $data['telp_tamu'];
+        $events_tamu_eksternal = [];
+        for ($i=0; $i < count($nama_tamu); $i++) { 
+            $events_tamu_eksternal[] = [
+                'id_events' => $data['id_event'],
+                'nama' => $nama_tamu[$i],
+                'email' => $email_tamu[$i],
+                'no_telp' => $telp_tamu[$i],
+            ];
+        }
+        DB::table('events_tamu_eksternal')
+            ->insert($events_tamu_eksternal);
+            
+        $result = [
+            'id_events' => $data['id_event'],
+            'title' => $data['title'],
+            'description' => $data['deskripsi'],
+            'start' => $data['start'],
+            'end' => $data['end'],
+            // 'color' => $data['color'],
+        ];
+
+        return response()->json($result, 200);
+
+        // return response()->json([
+        //     'msg' => 'Agenda berhasil diupdate.',
+        //     'data' => $result
+        // ], 200);
     }
 
     public function filter(Request $request)
@@ -174,13 +233,9 @@ class AgendaController extends Controller
 
     public function send_notification_email($email_pj, $data_tamu_external, $detail, $id_events)
     {
-        $sender = 'demenngoding98@gmail.com';
+        $sender = 'demenngoding98@gmail.co
+        m';
         // send email for penanggung jawab
-        // id_events
-        // title
-        // description
-        // start
-        // end
         $data = [
             'id_events' => $id_events,
             'title' => $detail['title'],
@@ -235,5 +290,24 @@ class AgendaController extends Controller
         curl_close($curl);
 
         return response()->json($response, 200);
+    }
+
+    public function hapus(Request $request)
+    {
+        $event = $request->all();
+
+        DB::table('events')
+            ->where('id_events', $event['id_events'])
+            ->delete();
+
+        DB::table('events_tamu')
+            ->where('id_events', $event['id_events'])
+            ->delete();
+
+        DB::table('events_tamu_eksternal')
+            ->where('id_events', $event['id_events'])
+            ->delete();
+
+        return response()->json($event, 200);
     }
 }

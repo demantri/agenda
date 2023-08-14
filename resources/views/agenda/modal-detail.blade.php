@@ -53,7 +53,25 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal"><i class="ri-close-fill"></i> Tutup</button>
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal"> Tutup</button>
+                @if (
+                  Auth::check() == true 
+                  && Auth::user()->role_name == 'admin'
+                )
+                <button 
+                  type="button" 
+                  class="btn btn-primary btn-edit-agenda"
+                > Edit</button>
+                @endif
+                @if (
+                  Auth::check() == true 
+                  && Auth::user()->role_name == 'superadmin'
+                )
+                <button 
+                  type="button" 
+                  class="btn btn-outline-danger btn-hapus-agenda"
+                > Hapus</button>
+                @endif
             </div>
         </div>
     </div>
