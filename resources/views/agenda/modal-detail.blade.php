@@ -64,8 +64,7 @@
                 ><i class="ri-pencil-fill"></i> Edit</button>
                 @endif
                 @if (
-                  Auth::check() == true 
-                  && Auth::user()->role_name == 'superadmin' OR Auth::user()->role_name == 'admin'
+                  Auth::check() == true
                 )
                 <button 
                   type="button" 
