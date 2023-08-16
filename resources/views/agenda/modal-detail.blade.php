@@ -65,7 +65,7 @@
                 @endif
                 @if (
                   Auth::check() == true 
-                  && Auth::user()->role_name == 'superadmin'
+                  && Auth::user()->role_name == 'superadmin' OR Auth::user()->role_name == 'admin'
                 )
                 <button 
                   type="button" 
