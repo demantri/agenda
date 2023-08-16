@@ -11,15 +11,24 @@
         this.value = this.value.replace(/[^0-9]/g, '');
     });
 
-    // let selectedTamu = [];
-
     function handleClick(checkbox) {
+        var today = new Date();
+        var dd = String(today.getDate()).padStart(2, '0');
+        var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+        var yyyy = today.getFullYear();
+
+        // today = mm + '/' + dd + '/' + yyyy;
+        today = yyyy + '-' + mm + '-' + dd + 'T' + '23:59'
+        
         if (checkbox.checked) {
             // true
+            console.log(today);
             $("#end").prop("readonly", true);
+            $("#end").val(today);
         } else {
             // false
             $("#end").prop("readonly", false);
+            $("#end").val('');
             // console.log(checkbox.checked);
         }
     }
@@ -400,6 +409,7 @@
     } 
 
     $(document).ready(function() {
+        // swal('success', 'success', 'success');
         let site_url = '{{ url('/') }}';
         
         $.ajaxSetup({
@@ -424,26 +434,36 @@
             $.ajax({
                 url: '{{ url('agenda/save') }}',
                 type: 'post',
-                headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'},
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
                 beforeSend: function() {
                     $("#loader").show();
                 },
                 data: data,
                 success: function(response) {
                     $("#loader").hide();
-                    closeModal();
-                    displayMessage(response.msg);
+                    swal({
+                        title: "Sukses",
+                        text: response.msg,
+                        icon: "success"
+                    }).then(function() {
+                        swal.close();
+                        closeModal();
+                        location.reload();
+                    });
+                    // displayMessage(response.msg);
 
-                    $("#calendar").fullCalendar('renderEvent', {
-                        id_events: response.data.id_events,
-                        title: response.data.title,
-                        description: response.data.description,
-                        start: response.data.start,
-                        end: response.data.end,
-                        color: response.data.color
-                    }, true);
+                    // $("#calendar").fullCalendar('renderEvent', {
+                    //     id_events: response.data.id_events,
+                    //     title: response.data.title,
+                    //     description: response.data.description,
+                    //     start: response.data.start,
+                    //     end: response.data.end,
+                    //     color: response.data.color
+                    // }, true);
 
-                    $("#calendar").fullCalendar('unselect');
+                    // $("#calendar").fullCalendar('unselect');
                 },
                 error: function(err, status, xhr) {
                     // swal.close();
@@ -466,6 +486,16 @@
                 success: function(response) {
                     $("#loader").hide();
 
+                    swal({
+                        title: "Sukses",
+                        text: 'Agenda berhasil diupdate',
+                        icon: "success"
+                    }).then(function() {
+                        swal.close();
+                        closeModal();
+                        location.reload();
+                    });
+
                     // $("#calendar").fullCalendar('rerenderEvent', {
                     //     title: response.title,
                     //     description: response.description,
@@ -474,11 +504,11 @@
                     //     color: response.color,
                     // }, true);
                     
-                    closeModal();
+                    // closeModal();
                     
-                    displayMessage('Agenda berhasil diupdate!');
+                    // displayMessage('Agenda berhasil diupdate!');
 
-                    location.reload();
+                    // location.reload();
 
                     // $("#calendar").fullCalendar('refresh');
 
@@ -505,6 +535,7 @@
 
         $("#calendar").fullCalendar({
             locale: 'id',
+            // aspectRatio:  2.5,
             header: {
                 left: 'prev,next today',
                 center: 'title',
@@ -539,7 +570,7 @@
                 return ['', event.title].indexOf($('#filter_judul').val()) >= 0
             },
             eventClick: function (event) {
-                console.log(event);
+                // console.log(event);
                 modalDetail(event);
             }
         });

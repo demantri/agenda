@@ -92,16 +92,24 @@ class AgendaController extends Controller
                 'email' => $email_tamu[$i],
                 'no_telp' => $telp_tamu[$i],
             ];
+
+            // send whatsapp notification?
+            $this->send_notification_wa($telp_tamu[$i], 'Agenda #' . $id_events . ' ' . $request->title .' berhasil di buat.');
         }
         DB::table('events_tamu_eksternal')
             ->insert($events_tamu_eksternal);
 
-        // send notification here
+        // send notification heres
         $this->send_notification_email($request->email_pj, $events_tamu_eksternal, $detail, $id_events);
-        $this->send_notification_wa($request->cp, 'Agenda #' . $id_events . ' ' . $request->title .' berhasil di buat.');
+
+        $number_array = [
+            $request->cp,
+            '081931356522'
+        ];
+        $this->send_notification_wa_new($number_array, 'Agenda #' . $id_events . ' ' . $request->title .' berhasil di buat.');
 
         return response()->json([
-            'msg' => 'Berhasil disimpan',
+            'msg' => 'Agenda berhasil dibuat',
             'data' => $detail
         ], 200);
     }
@@ -233,8 +241,7 @@ class AgendaController extends Controller
 
     public function send_notification_email($email_pj, $data_tamu_external, $detail, $id_events)
     {
-        $sender = 'demenngoding98@gmail.co
-        m';
+        $sender = 'demenngoding98@gmail.com';
         // send email for penanggung jawab
         $data = [
             'id_events' => $id_events,
@@ -261,6 +268,38 @@ class AgendaController extends Controller
 
     }
 
+    public function send_notification_wa_new($target, $message)
+    {
+        $send_number_fix = implode(',', $target);
+        $curl = curl_init();
+        curl_setopt_array($curl, array(
+        CURLOPT_URL => 'https://api.fonnte.com/send',
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_ENCODING => '',
+        CURLOPT_MAXREDIRS => 10,
+        CURLOPT_TIMEOUT => 0,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        CURLOPT_CUSTOMREQUEST => 'POST',
+        CURLOPT_POSTFIELDS => array(
+            'target' => $send_number_fix,
+            'message' => $message, 
+            'countryCode' => '62', //optional
+        ),
+        CURLOPT_HTTPHEADER => array(
+            
+                'Authorization: MnxPoBHzHerBN!vxiQ!g' //V@B__rcKtsWtI1CKN0RX //change TOKEN to your actual token
+                // 'Authorization: V@B__rcKtsWtI1CKN0RX' //V@B__rcKtsWtI1CKN0RX //change TOKEN to your actual token
+            ),
+        ));
+
+        $response = curl_exec($curl);
+
+        curl_close($curl);
+
+        return response()->json($response, 200);
+    }
+
     public function send_notification_wa($target, $message)
     {
         $curl = curl_init();
@@ -280,8 +319,9 @@ class AgendaController extends Controller
             'countryCode' => '62', //optional
         ),
         CURLOPT_HTTPHEADER => array(
-                // 'Authorization: MnxPoBHzHerBN!vxiQ!g' //V@B__rcKtsWtI1CKN0RX //change TOKEN to your actual token
-                'Authorization: V@B__rcKtsWtI1CKN0RX' //V@B__rcKtsWtI1CKN0RX //change TOKEN to your actual token
+            
+                'Authorization: MnxPoBHzHerBN!vxiQ!g' //V@B__rcKtsWtI1CKN0RX //change TOKEN to your actual token
+                // 'Authorization: V@B__rcKtsWtI1CKN0RX' //V@B__rcKtsWtI1CKN0RX //change TOKEN to your actual token
             ),
         ));
 

@@ -235,7 +235,7 @@
     <script src='https://unpkg.com/tooltip.js@1.3.3/dist/umd/tooltip.min.js'></script>
     <script src="{{ asset('assets/js/select2.full.min.js') }}"></script>
     <script src="//cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"></script>
 
     <script>
         $('.numeric').on('input', function() {

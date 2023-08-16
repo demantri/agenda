@@ -142,7 +142,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal"><i class="ri-close-fill"></i> Tutup</button>
-                    <button type="submit" class="btn btn-primary"><i class="ri-check-fill"></i> Simpan</button>
+                    <button type="submit" class="btn btn-primary"><i class="ri-save-3-line"></i> Simpan</button>
                 </div>
             </form>
         </div>
