@@ -63,13 +63,16 @@
                   class="btn btn-primary btn-edit-agenda"
                 ><i class="ri-pencil-fill"></i> Edit</button>
                 @endif
+
                 @if (
                   Auth::check() == true
                 )
-                <button 
-                  type="button" 
-                  class="btn btn-outline-danger btn-hapus-agenda"
-                ><i class="ri-delete-bin-5-line"></i> Hapus</button>
+                <div id="hapusbtn">
+                  <button 
+                    type="button" 
+                    class="btn btn-outline-danger btn-hapus-agenda"
+                  ><i class="ri-delete-bin-5-line"></i> Hapus</button>
+                </div>
                 @endif
             </div>
         </div>

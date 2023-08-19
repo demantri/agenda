@@ -16,6 +16,6 @@ class Event extends Model
 
      */
     protected $fillable = [
-        'title', 'description', 'start', 'end', 'color'
+        'id', 'title', 'description', 'start', 'end', 'color', 'penyelenggara', 'penyelenggara_unit', 'penanggung_jawab', 'contact_person', 'email_pj'
     ];
 }

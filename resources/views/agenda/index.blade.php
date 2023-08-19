@@ -21,7 +21,7 @@
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header">
+                <div class="card-body">
                     <div class="row m-4">
                         <div class="d-flex">
                             <div class="col-sm-6 col-md-6">
@@ -44,9 +44,10 @@
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="card-body">
-                    <div id="calendar" class="mt-4 m-4"></div>
+                    
+                    <div id='calendar-container'>
+                        <div id='calendar'></div>
+                    </div>
                 </div>
             </div>
         </div>

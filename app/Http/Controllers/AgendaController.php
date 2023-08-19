@@ -7,18 +7,18 @@ use App\Mail\SendMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Spatie\GoogleCalendar\Event as EventGoogleCalendar;
 
 class AgendaController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, $filter = null)
     {
         $tamu = DB::select("select * from tamu");
         $penyelenggara = DB::select("select * from penyelenggara");
         
         if ($request->ajax()) {
-            // dd($request->start);
             $data = Event::whereDate('start', '>=', $request->start)
                 ->whereDate('end', '<=', $request->end)
                 ->get([
@@ -34,16 +34,9 @@ class AgendaController extends Controller
     public function save(Request $request)
     {
         $id_events = rand(1000, 9999);
-        
-        $color = [
-            '#F38181',
-            '#FCE38A',
-            '#3F72AF',
-            '#F08A5D',
-            '#B83B5E',
-            '#AD8B73',
-        ];
-        $arr = array_rand($color);
+        $user_id = Auth::user()->id;
+        $unit = $request->penyelenggara_1;
+        $get_unit = DB::select("select * from penyelenggara where id = '$unit'")[0];
 
         $detail = [
             'id_events' => $id_events,
@@ -52,31 +45,28 @@ class AgendaController extends Controller
             'jumlah_peserta' => $request->jumlah_peserta,
             'start' => date('Y-m-d H:i:s', strtotime($request->start)),
             'end' => date('Y-m-d H:i:s', strtotime($request->end)),
-            'color' => $color[$arr],
+            'unit_id' => $unit,
+            'color' => $get_unit->color,
             'penyelenggara' => $request->penyelenggara,
-            'penyelenggara_unit' => $request->penyelenggara_1,
+            'penyelenggara_unit' => $get_unit->nama,
             'penanggung_jawab' => $request->pj,
             'contact_person' => $request->cp,
             'email_pj' => $request->email_pj,
+            'is_allday' => $request->is_allday == 'on' ? '1' : '0',
+            'created_by' => $user_id,
         ];
         DB::table('events')
             ->insert($detail);
 
-        // $this->send_notification_wa($request->cp, 'Agenda #' . $id_events . ' ' . $request->title .' berhasil di buat.');
+        // $this->send_notification_wa($request->cp, $events_tamu_eksternal, $detail);
 
         // insert tbl tamu
         $daftar_tamu = $request->daftar_tamu;
-        $events_tamu = [];
-        for ($i=0; $i < count($daftar_tamu) ; $i++) { 
-            // get tamu
-            $tamu = DB::table('tamu')->where('id', $daftar_tamu[$i])->first();
-            
-            $events_tamu[] = [
-                'id_events' => $id_events,
-                'id_tamu' => $daftar_tamu[$i],
-                'nama_tamu' => $tamu->nama
-            ];
-        }
+        $events_tamu = [
+            'id_events' => $id_events,
+            // 'id_tamu' => $daftar_tamu[$i],
+            'nama_tamu' => $daftar_tamu
+        ];
         DB::table('events_tamu')
             ->insert($events_tamu);
 
@@ -84,6 +74,7 @@ class AgendaController extends Controller
         $nama_tamu = $request->nama_tamu;
         $email_tamu = $request->email_tamu;
         $telp_tamu = $request->telp_tamu;
+        $telp_array = [];
         $events_tamu_eksternal = [];
         for ($i=0; $i < count($nama_tamu); $i++) { 
             $events_tamu_eksternal[] = [
@@ -93,20 +84,19 @@ class AgendaController extends Controller
                 'no_telp' => $telp_tamu[$i],
             ];
 
-            // send whatsapp notification?
-            $this->send_notification_wa($telp_tamu[$i], 'Agenda #' . $id_events . ' ' . $request->title .' berhasil di buat.');
+            $telp_array[] = $telp_tamu[$i];
         }
-        DB::table('events_tamu_eksternal')
-            ->insert($events_tamu_eksternal);
+        DB::table('events_tamu_eksternal')->insert($events_tamu_eksternal);
+        $this->send_notification_wa($telp_array, $events_tamu_eksternal, $detail);
 
-        // send notification heres
+        // send notification here
         $this->send_notification_email($request->email_pj, $events_tamu_eksternal, $detail, $id_events);
 
         $number_array = [
             $request->cp,
             '081931356522'
         ];
-        $this->send_notification_wa_new($number_array, 'Agenda #' . $id_events . ' ' . $request->title .' berhasil di buat.');
+        $this->send_notification_wa_new($number_array, $events_tamu_eksternal, $detail);
 
         return response()->json([
             'msg' => 'Agenda berhasil dibuat',
@@ -118,6 +108,9 @@ class AgendaController extends Controller
     {
         $data = $request->all();
 
+        $unit = $data['penyelenggara_1'];
+        $get_unit = DB::select("select * from penyelenggara where id = '$unit'")[0];
+
         $detail = [
             // 'id_events' => $data['id_event'],
             'title' => $data['title'],
@@ -125,9 +118,11 @@ class AgendaController extends Controller
             'jumlah_peserta' => $data['jumlah_peserta'],
             'start' => date('Y-m-d H:i:s', strtotime($data['start'])),
             'end' => date('Y-m-d H:i:s', strtotime($data['end'])),
+            'unit_id' => $unit,
+            'color' => $get_unit->color,
             // 'color' => $color[$arr],
             'penyelenggara' => $data['penyelenggara'],
-            'penyelenggara_unit' => $data['penyelenggara_1'],
+            'penyelenggara_unit' => $get_unit->nama,
             'penanggung_jawab' => $data['pj'],
             'contact_person' => $data['cp'],
             'email_pj' => $data['email_pj'],
@@ -137,23 +132,27 @@ class AgendaController extends Controller
             ->update($detail);
 
         // delete user nya
-        DB::table('events_tamu')->where('id_events', $data['id_event'])->delete();
+        // DB::table('events_tamu')->where('id_events', $data['id_event'])->delete();
 
         // insert
         $daftar_tamu = $data['daftar_tamu'];
-        $events_tamu = [];
-        for ($i=0; $i < count($daftar_tamu) ; $i++) { 
-            // get tamu
-            $tamu = DB::table('tamu')->where('id', $daftar_tamu[$i])->first();
+        // $events_tamu = [];
+        // for ($i=0; $i < count($daftar_tamu) ; $i++) { 
+        //     // get tamu
+        //     $tamu = DB::table('tamu')->where('id', $daftar_tamu[$i])->first();
             
-            $events_tamu[] = [
-                'id_events' => $data['id_event'],
-                'id_tamu' => $daftar_tamu[$i],
-                'nama_tamu' => $tamu->nama
-            ];
-        }
+        //     $events_tamu[] = [
+        //         'id_events' => $data['id_event'],
+        //         'id_tamu' => $daftar_tamu[$i],
+        //         'nama_tamu' => $tamu->nama
+        //     ];
+        // }
+        $events_tamu = [
+            'nama_tamu' => $daftar_tamu
+        ];
         DB::table('events_tamu')
-            ->insert($events_tamu);
+            ->where('id_events', $data['id_event'])
+            ->update($events_tamu);
 
 
         // delete events_tamu_eksternal
@@ -249,6 +248,10 @@ class AgendaController extends Controller
             'description' => $detail['description'],
             'start' => $detail['start'],
             'end' => $detail['end'],
+            'penanggung_jawab' => $detail['penanggung_jawab'],
+            'contact_person' => $detail['contact_person'],
+            'email_pj' => $detail['email_pj'],
+            'tamu' => $data_tamu_external
         ];
 
         Mail::send('email_agenda', $data, function($message) use ($email_pj, $sender) {
@@ -268,9 +271,30 @@ class AgendaController extends Controller
 
     }
 
-    public function send_notification_wa_new($target, $message)
+    public function send_notification_wa_new($target, $events_tamu_eksternal, $detail)
     {
         $send_number_fix = implode(',', $target);
+        $data = [
+            'id_events' => $detail['id_events'],
+            'title' => $detail['title'],
+            'description' => $detail['description'],
+            'start' => $detail['start'],
+            'end' => $detail['end'],
+            'penanggung_jawab' => $detail['penanggung_jawab'],
+            'contact_person' => $detail['contact_person'],
+            'email_pj' => $detail['email_pj'],
+            'tamu' => $events_tamu_eksternal
+        ];
+
+        $no = 1;
+        $message = "*Notifikasi Agenda #".$data['id_events']."*\n\nJudul Agenda : ".$data['title']."\nWaktu : ". date('d-m-Y H:i:s', strtotime($data['start'])) ." (WIB)\n\n_Bagian internal_\nNama Penanggung Jawab Kegiatan\n- Nama : ". $data['penanggung_jawab'] ."\nKontak Person Penanggung Jawab Kegiatan :\n- Whatsapp :  ". $data['contact_person'] ."\n- Email : ".$data['email_pj']."\n\nBerikut ini merupakan tamu yang di udang :\n";
+
+        foreach ($data['tamu'] as $item) {
+            $message .= $no++ . ". " . $item['nama'] . " - " . $item['no_telp'] . " - ". $item['email'];
+        }
+
+        $message .= "\n\n" . $data['description'];
+
         $curl = curl_init();
         curl_setopt_array($curl, array(
         CURLOPT_URL => 'https://api.fonnte.com/send',
@@ -300,10 +324,32 @@ class AgendaController extends Controller
         return response()->json($response, 200);
     }
 
-    public function send_notification_wa($target, $message)
+    public function send_notification_wa($target, $events_tamu_eksternal, $detail)
     {
-        $curl = curl_init();
+        $number_target = implode(',', $target);
+        
+        $data = [
+            'id_events' => $detail['id_events'],
+            'title' => $detail['title'],
+            'description' => $detail['description'],
+            'start' => $detail['start'],
+            'end' => $detail['end'],
+            'penanggung_jawab' => $detail['penanggung_jawab'],
+            'contact_person' => $detail['contact_person'],
+            'email_pj' => $detail['email_pj'],
+            'tamu' => $events_tamu_eksternal
+        ];
 
+        $no = 1;
+        $message = "*Notifikasi Agenda #".$data['id_events']."*\n\nJudul Agenda : ".$data['title']."\nWaktu : ". date('d-m-Y H:i:s', strtotime($data['start'])) ." (WIB)\n\n_Bagian internal_\nNama Penanggung Jawab Kegiatan\n- Nama : ". $data['penanggung_jawab'] ."\nKontak Person Penanggung Jawab Kegiatan :\n- Whatsapp :  ". $data['contact_person'] ."\n- Email : ".$data['email_pj']."\n\nBerikut ini merupakan tamu yang di udang :\n";
+
+        foreach ($data['tamu'] as $item) {
+            $message .= $no++ . ". " . $item['nama'] . " - " . $item['no_telp'] . " - ". $item['email'];
+        }
+
+        $message .= "\n\n" . $data['description'];
+
+        $curl = curl_init();
         curl_setopt_array($curl, array(
         CURLOPT_URL => 'https://api.fonnte.com/send',
         CURLOPT_RETURNTRANSFER => true,
@@ -314,7 +360,7 @@ class AgendaController extends Controller
         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
         CURLOPT_CUSTOMREQUEST => 'POST',
         CURLOPT_POSTFIELDS => array(
-            'target' => $target,
+            'target' => $number_target,
             'message' => $message, 
             'countryCode' => '62', //optional
         ),

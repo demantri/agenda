@@ -3,6 +3,7 @@
 use App\Http\Controllers\AgendaController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\UnitController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -19,7 +20,7 @@ use Illuminate\Support\Facades\Route;
 
 // Route::get('login', [LoginController::class, 'index']);
 // Route::get('/', [LoginController::class, 'index']);
-Route::get('login', [LoginController::class, 'index']);
+Route::get('login', [LoginController::class, 'index'])->name('login');
 Route::post('doLogin', [LoginController::class, 'doLogin']);
 Route::get('logout', [LoginController::class, 'logout']);
 
@@ -35,11 +36,20 @@ Route::prefix('agenda')->group(function () {
     Route::post('/hapus', [AgendaController::class, 'hapus']);
 });
 
-Route::prefix('user')->group(function () {
-    Route::get('/', [UserController::class, 'index']);
-    Route::post('store', [UserController::class, 'store']);
-    Route::post('update', [UserController::class, 'update']);
-    Route::get('delete/{id}', [UserController::class, 'delete']);
+Route::middleware(['auth'])->group(function () {
+    Route::prefix('user')->group(function () {
+        Route::get('/', [UserController::class, 'index']);
+        Route::post('store', [UserController::class, 'store']);
+        Route::post('update', [UserController::class, 'update']);
+        Route::get('delete/{id}', [UserController::class, 'delete']);
+    });
+    
+    Route::prefix('unit')->group(function () {
+        Route::get('/', [UnitController::class, 'index']);
+        Route::post('store', [UnitController::class, 'store']);
+        Route::post('update', [UnitController::class, 'update']);
+        Route::get('delete/{id}', [UnitController::class, 'delete']);
+    });
 });
 
 Route::get('/', function () {

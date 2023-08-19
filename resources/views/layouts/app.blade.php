@@ -46,24 +46,11 @@
     ======================================================== -->
 </head>
 
-<body class="{{ Request::is('agenda') ? 'toggle-sidebar' : '' }}">
-{{-- <body> --}}
+{{-- <body class="{{ Request::is('agenda') ? 'toggle-sidebar' : '' }}"> --}}
+{{-- <body class="{{ Auth::check() == false ? 'toggle-sidebar' : '' }}"> --}}
+<body class="toggle-sidebar" id="body">
 
     <div id="loader" style="display: none">
-        {{-- <div class="lds-spinner" width='32px' height='32px'>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
-        </div> --}}
         <div class="loading">Loading&#8230;</div>
     </div>
 
@@ -75,15 +62,10 @@
                 <img src="assets/img/logo.png" alt="">
                 <span class="d-none d-lg-block">NiceAdmin</span>
             </a>
-            <i class="bi bi-list toggle-sidebar-btn"></i>
+            @if (Auth::check() == true && Auth::user()->role_name == 'superadmin' )
+                <i class="bi bi-list toggle-sidebar-btn"></i>
+            @endif
         </div><!-- End Logo -->
-
-        {{-- <div class="search-bar">
-            <form class="search-form d-flex align-items-center" method="POST" action="#">
-                <input type="text" name="query" placeholder="Search" title="Enter search keyword">
-                <button type="submit" title="Search"><i class="bi bi-search"></i></button>
-            </form>
-        </div> --}}
 
         <nav class="header-nav ms-auto">
             <ul class="d-flex align-items-center">
@@ -97,12 +79,12 @@
                 <li class="nav-item dropdown pe-3">
                     <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
                         <img src="https://cdn-icons-png.flaticon.com/512/666/666201.png" alt="Profile" class="rounded-circle">
-                        <span class="d-none d-md-block dropdown-toggle ps-2">{{ Str::upper(Auth::user()->username) }}</span>
+                        <span class="d-none d-md-block dropdown-toggle ps-2">{{ Str::ucfirst(Auth::user()->nama_petugas) . ' - ' . Str::ucfirst(Auth::user()->role_name) }}</span>
                     </a><!-- End Profile Iamge Icon -->
 
                     <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
                         <li class="dropdown-header">
-                            <h6>{{ Str::upper(Auth::user()->username) }}</h6>
+                            <h6>{{ Str::ucfirst(Auth::user()->nama_petugas) . ' - ' . Str::ucfirst(Auth::user()->role_name) }}</h6>
                             {{-- <span>Web Designer</span> --}}
                         </li>
                         <li>
@@ -119,68 +101,6 @@
                     <a href="{{ url('login') }}">Login</a>
                 </div>
                 @endif
-
-
-                {{-- @if (Auth::check() != true)
-                <div class="pe-4">
-                    <a href="{{ url('login') }}">Login</a>
-                </div>
-                @else
-                <li class="nav-item dropdown pe-3">
-                    <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
-                        <img src="https://cdn-icons-png.flaticon.com/512/666/666201.png" alt="Profile" class="rounded-circle">
-                        <span class="d-none d-md-block dropdown-toggle ps-2">K. Anderson</span>
-                    </a><!-- End Profile Iamge Icon -->
-
-                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
-                        <li class="dropdown-header">
-                            <h6>Kevin Anderson</h6>
-                            <span>Web Designer</span>
-                        </li>
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
-
-                        <li>
-                            <a class="dropdown-item d-flex align-items-center" href="users-profile.html">
-                                <i class="bi bi-person"></i>
-                                <span>My Profile</span>
-                            </a>
-                            </li>
-                            <hr class="dropdown-divider">
-                            <li>
-                        </li>
-
-                        <li>
-                            <a class="dropdown-item d-flex align-items-center" href="users-profile.html">
-                                <i class="bi bi-gear"></i>
-                                <span>Account Settings</span>
-                            </a>
-                            </li>
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-
-                        <li>
-                        <a class="dropdown-item d-flex align-items-center" href="pages-faq.html">
-                            <i class="bi bi-question-circle"></i>
-                            <span>Need Help?</span>
-                        </a>
-                        </li>
-                        <li>
-                        <hr class="dropdown-divider">
-                        </li>
-
-                        <li>
-                        <a class="dropdown-item d-flex align-items-center" href="#">
-                            <i class="bi bi-box-arrow-right"></i>
-                            <span>Sign Out</span>
-                        </a>
-                        </li>
-
-                    </ul><!-- End Profile Dropdown Items -->
-                </li>
-                @endif --}}
             </ul>
         </nav><!-- End Icons Navigation -->
 
@@ -223,6 +143,8 @@
 
     <!-- Template Main JS File -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src='https://unpkg.com/tooltip.js/dist/umd/tooltip.min.js'></script>
     <script src="{{ asset('assets/js/main.js') }}"></script>
     {{-- <script src="{{ asset('assets/js/custom.js') }}"></script> --}}
 

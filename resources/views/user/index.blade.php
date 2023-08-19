@@ -40,15 +40,17 @@
                         <i class="bi bi-plus"></i>
                         Tambah
                     </button>
-                    <table class="table" id="table" style="width: 100%">
+                    <table class="table table-hover" id="table" style="width: 100%">
                         <thead>
                             <tr>
-                                <th scope="col">No</th>
-                                <th scope="col">Username</th>
-                                <th scope="col">Role</th>
-                                <th scope="col">Email</th>
-                                <th scope="col">Password</th>
-                                <th scope="col">Action</th>
+                                <th class="text-nowrap">Action</th>
+                                <th class="text-nowrap">No</th>
+                                <th class="text-nowrap">Nama Petugas</th>
+                                <th class="text-nowrap">Unit/bagian</th>
+                                <th class="text-nowrap">Username</th>
+                                <th class="text-nowrap">Role</th>
+                                <th class="text-nowrap">Email</th>
+                                <th class="text-nowrap">Password</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -57,27 +59,34 @@
                             @endphp
                             @foreach ($data as $item)
                             <tr>
+                                <td>
+                                    <div class="d-flex">
+                                        <button 
+                                            style="margin-right: 3px;"
+                                            class="btn btn-sm btn-light btn-edit"
+                                            data-bs-target="#edit"
+                                            data-bs-toggle="modal"
+                                            data-id="{{ $item->id }}"
+                                            data-username="{{ $item->username }}"
+                                            data-role_name="{{ $item->role_name }}"
+                                            data-email="{{ $item->email }}"
+                                            data-password="{{ $item->password }}"
+                                            data-nama_petugas="{{ $item->nama_petugas }}"
+                                            data-unit_id="{{ $item->unit_id }}"
+                                        ><i class="ri-pencil-fill"></i></button>
+                                        @if ($item->role_name != 'superadmin')
+                                        <a href="{{ url('user/delete/' . $item->id ) }}" class="btn btn-sm btn-outline-danger"><i class="ri-delete-bin-5-line"></i></a>
+                                        @endif
+                                    </div>
+                                    {{-- <a href="{{ url('user/delete/' . $item->id ) }}" class="btn btn-sm btn-outline-success">Reset Password</a> --}}
+                                </td>
                                 <td scope="row">{{ $no++ }}</td>
+                                <td>{{ $item->nama_petugas }}</td>
+                                <td>{{ $item->unit_name }}</td>
                                 <td>{{ $item->username }}</td>
                                 <td>{{ $item->role_name }}</td>
                                 <td>{{ $item->email }}</td>
                                 <td>{{ $item->password }}</td>
-                                <td>
-                                    <button 
-                                        class="btn btn-sm btn-secondary btn-edit"
-                                        data-bs-target="#edit"
-                                        data-bs-toggle="modal"
-                                        data-id="{{ $item->id }}"
-                                        data-username="{{ $item->username }}"
-                                        data-role_name="{{ $item->role_name }}"
-                                        data-email="{{ $item->email }}"
-                                        data-password="{{ $item->password }}"
-                                    >Edit</button>
-                                    @if ($item->role_name != 'superadmin')
-                                    <a href="{{ url('user/delete/' . $item->id ) }}" class="btn btn-sm btn-outline-danger">Hapus</a>
-                                    @endif
-                                    {{-- <a href="{{ url('user/delete/' . $item->id ) }}" class="btn btn-sm btn-outline-success">Reset Password</a> --}}
-                                </td>
                             </tr>
                             @endforeach
                         </tbody>
@@ -101,24 +110,49 @@
             toastr.success("{{ Session::get('success') }}");
         @endif
 
+        $(document).on("click", ".btn-edit", function() {
+            let id = $(this).data('id');
+            let username = $(this).data('username');
+            let role_name = $(this).data('role_name');
+            let email = $(this).data('email');
+            let password = $(this).data('password');
+            let nama_petugas = $(this).data('nama_petugas');
+            let unit_id = $(this).data('unit_id');
+
+            $("#id_edit").val(id);
+            $("#role_name_edit").val(role_name);
+            $("#username_edit").val(username);
+            $("#password_edit").val(password);
+            $("#email_edit").val(email);
+            $("#nama_petugas_edit").val(nama_petugas);
+            $("#unit_edit").val(unit_id);
+        });
+
         $(document).ready(function() {
             var table = $("#table").DataTable({
-                scrollX: true
+                destroy: true,
+                scrollX: true,
+                columnDefs: [{
+                    orderable: false,
+                    // className: 'select-checkbox',
+                    targets:   0
+                }],
+				order: [[ 1, "asc" ]],
             });
 
-            $(".btn-edit").on("click", function() {
-                let id = $(this).data('id');
-                let username = $(this).data('username');
-                let role_name = $(this).data('role_name');
-                let email = $(this).data('email');
-                let password = $(this).data('password');
+            // $(".btn-edit").on("click", function() {
+            // let id = $(this).data('id');
+            // let username = $(this).data('username');
+            // let role_name = $(this).data('role_name');
+            // let email = $(this).data('email');
+            // let password = $(this).data('password');
 
-                $("#id_edit").val(id);
-                $("#role_name_edit").val(role_name);
-                $("#username_edit").val(username);
-                $("#password_edit").val(password);
-                $("#email_edit").val(email);
-            });
+            // $("#id_edit").val(id);
+            // $("#role_name_edit").val(role_name);
+            // $("#username_edit").val(username);
+            // $("#password_edit").val(password);
+            // $("#email_edit").val(email);
+            // });
         });
     </script>
 @endsection
