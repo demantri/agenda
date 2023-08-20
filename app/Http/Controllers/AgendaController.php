@@ -240,7 +240,9 @@ class AgendaController extends Controller
 
     public function send_notification_email($email_pj, $data_tamu_external, $detail, $id_events)
     {
+        // diganti untuk email pengirim nya siapa
         $sender = 'demenngoding98@gmail.com';
+
         // send email for penanggung jawab
         $data = [
             'id_events' => $id_events,
@@ -253,6 +255,11 @@ class AgendaController extends Controller
             'email_pj' => $detail['email_pj'],
             'tamu' => $data_tamu_external
         ];
+
+        /** 
+         * from('emailnya', 'nama pengirim')
+         * subject - subject email nya
+         */
 
         Mail::send('email_agenda', $data, function($message) use ($email_pj, $sender) {
             $message->to($email_pj)
@@ -269,6 +276,12 @@ class AgendaController extends Controller
             }
         });
 
+        $custom_email = 'sektigita.93@gmail.com';
+        Mail::send('email_agenda', $data, function($message) use ($custom_email, $sender) {
+            $message->to($custom_email)
+                ->from($sender, 'Demen Ngoding')
+                ->subject('Agenda Baru');
+        });
     }
 
     public function send_notification_wa_new($target, $events_tamu_eksternal, $detail)
