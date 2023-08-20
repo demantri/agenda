@@ -73,8 +73,8 @@
                 } else {
                     $('.popover').remove();
                 }
-                
-                return event.title.toLowerCase().indexOf($('#filter_judul').val()) >= 0
+                let searchInput = $("#filter_judul").val().toLowerCase();
+                return event.title.toLowerCase().indexOf(searchInput) >= 0 || event.description.toLowerCase().indexOf(searchInput) >= 0;
             },
             eventClick: function (event) {
                 // console.log(event);
@@ -606,7 +606,9 @@
 
         $("#form-filter").on("submit", function(e) {
             e.preventDefault();
-            $("#calendar").fullCalendar('rerenderEvents');
+            var calendar = $("#calendar").fullCalendar();
+            calendar.fullCalendar('changeView', 'listYear');
+            calendar.fullCalendar('rerenderEvents');
         });
 
         $("#myform").validate({

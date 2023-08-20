@@ -46,8 +46,6 @@
     ======================================================== -->
 </head>
 
-{{-- <body class="{{ Request::is('agenda') ? 'toggle-sidebar' : '' }}"> --}}
-{{-- <body class="{{ Auth::check() == false ? 'toggle-sidebar' : '' }}"> --}}
 <body class="toggle-sidebar" id="body">
 
     <div id="loader" style="display: none">
@@ -60,21 +58,15 @@
         <div class="d-flex align-items-center justify-content-between">
             <a href="index.html" class="logo d-flex align-items-center">
                 <img src="assets/img/logo.png" alt="">
-                <span class="d-none d-lg-block">NiceAdmin</span>
+                <span class="d-none d-lg-block" style="margin-left: 1rem">e-Calendar</span>
             </a>
             @if (Auth::check() == true && Auth::user()->role_name == 'superadmin' )
                 <i class="bi bi-list toggle-sidebar-btn"></i>
             @endif
-        </div><!-- End Logo -->
+        </div>
 
         <nav class="header-nav ms-auto">
             <ul class="d-flex align-items-center">
-                <li class="nav-item d-block d-lg-none">
-                    <a class="nav-link nav-icon search-bar-toggle " href="#">
-                        <i class="bi bi-search"></i>
-                    </a>
-                </li>
-
                 @if (Auth::check() == true)
                 <li class="nav-item dropdown pe-3">
                     <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
